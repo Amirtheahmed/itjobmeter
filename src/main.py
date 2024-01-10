@@ -6,6 +6,10 @@ from src.utils.service_key import get_service_account_key
 from src.badge_generator import update_job_count_badge
 import argparse
 
+# enum of websites
+WEBSITE_NAMES = [
+    'kariyernet'
+]
 
 def get_args():
     """
@@ -15,7 +19,7 @@ def get_args():
         args (argparse.Namespace): command line arguments
     """
     parser = argparse.ArgumentParser(description='Scrape IT jobs from different job portals')
-    parser.add_argument('website', type=str,
+    parser.add_argument('--website', type=str,
                         help='website to scrape jobs from')
     parser.add_argument('--max_jobs', type=int,
                         help='maximum number of jobs to scrape')
@@ -88,6 +92,7 @@ def backup_to_drive():
     df.to_json('sample_jobs.json', orient='records')
 
 
+
 def main():
     """
     Driver code.
@@ -100,52 +105,61 @@ def main():
     website = args.website
     max_jobs = args.max_jobs
 
-    # setup database and scraper.
-    main_db = Database(get_service_account_key(forMainDB=True))
+    websites = WEBSITE_NAMES
 
-    my_scraper = None
+    if website:
+        websites = [website]
 
-    if website == 'myjobmu':
-        my_scraper = MyJobMuJobScraper(main_db.get_recent_urls(), limit=max_jobs)
-    elif website == 'kariyernet':
-        my_scraper = KariyerNetJobScraper(main_db.get_recent_urls(), limit=max_jobs)
+    for website in websites:
+        print('Scraping jobs from', website)
 
-    # fetch new jobs from specified website
-    new_jobs = my_scraper.scrape()
+        # setup database and scraper.
+        main_db = Database(get_service_account_key(forMainDB=True))
 
-    # if no new jobs found exit
-    if (len(new_jobs) == 0):
-        return
+        my_scraper = None
 
-    # get data to be analysed in a list
-    job_details_list = [job['job_details'] for job in new_jobs]
-    salary_list = [job['salary'] for job in new_jobs]
-    location_list = [job['location'] for job in new_jobs]
-    job_title_list = [job['job_title'] for job in new_jobs]
+        if website == 'myjobmu':
+            my_scraper = MyJobMuJobScraper(main_db.get_recent_urls(), limit=max_jobs)
+        elif website == 'kariyernet':
+            my_scraper = KariyerNetJobScraper(main_db.get_recent_urls(), limit=max_jobs)
 
-    # print some info about new jobs found
-    print(len(new_jobs), ' new jobs found!')
-    print(job_title_list[:5])
 
-    # update database general stats such as size and last update dates
-    new_db_size = main_db.get_size() + len(new_jobs)
-    main_db.update_metadata(new_db_size)
+        # fetch new jobs from specified website
+        new_jobs = my_scraper.scrape()
 
-    # save new jobs to database
-    for job in new_jobs:
-        main_db.add_job(job)
+        # if no new jobs found exit
+        if (len(new_jobs) == 0):
+            return
 
-    # extract statistics from newly scraped data and update
-    # statistics collection
-    update_analytics(main_db, job_title_list,
-                     job_details_list, location_list, salary_list)
-    main_db.update_job_count_trend()
+        # get data to be analysed in a list
+        job_details_list = [job['job_details'] for job in new_jobs]
+        salary_list = [job['salary'] for job in new_jobs]
+        location_list = [job['location'] for job in new_jobs]
+        job_title_list = [job['job_title'] for job in new_jobs]
 
-    # send updated statistics to frontend db
-    sync_stats(main_db)
+        # print some info about new jobs found
+        print(len(new_jobs), ' new jobs found!')
+        print(job_title_list[:5])
 
-    # update job count in readme
-    update_job_count_badge(new_db_size)
+        # update database general stats such as size and last update dates
+        new_db_size = main_db.get_size() + len(new_jobs)
+        main_db.update_metadata(new_db_size)
+
+        # save new jobs to database
+        for job in new_jobs:
+            main_db.add_job(job)
+
+        # extract statistics from newly scraped data and update
+        # statistics collection
+        update_analytics(main_db, job_title_list,
+                         job_details_list, location_list, salary_list)
+        main_db.update_job_count_trend()
+
+        # send updated statistics to frontend db
+        sync_stats(main_db)
+
+        # update job count in readme
+        update_job_count_badge(new_db_size)
 
 
 if __name__ == "__main__":
