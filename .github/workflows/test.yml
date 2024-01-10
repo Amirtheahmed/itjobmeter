@@ -17,9 +17,6 @@ jobs:
           python-version: "3.9"
           cache: "pip" # caching pip dependencies
 
-      - name: navigate to backend folder
-        run: cd backend
-
       - name: install any new python dependencies
         run: |
           cd backend

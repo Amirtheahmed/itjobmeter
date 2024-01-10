@@ -21,14 +21,13 @@ jobs:
 
       - name: install any new python dependencies
         run: |
-          cd backend
           pip install -r requirements.txt
 
       - name: execute py script
         env:
           BACKEND_DB: ${{ secrets.BACKEND_DB  }}
           FRONTEND_DB: ${{ secrets.FRONTEND_DB  }}
-        run: python backend/src/main.py
+        run: python src/main.py
 
       - name: commit files
         run: |
