@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 
 import firebase_admin
 from firebase_admin import firestore
