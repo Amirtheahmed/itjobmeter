@@ -27,7 +27,7 @@ jobs:
         env:
           BACKEND_DB: ${{ secrets.BACKEND_DB  }}
           FRONTEND_DB: ${{ secrets.FRONTEND_DB  }}
-        run: python -m src.main --max_jobs 5
+        run: python -m src.main
 
       - name: commit files
         run: |

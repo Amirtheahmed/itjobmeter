@@ -19,10 +19,8 @@ jobs:
 
       - name: install any new python dependencies
         run: |
-          cd backend
           pip install -r requirements.txt
 
       - name: run tests
         run: |
-          cd backend
           nose2
