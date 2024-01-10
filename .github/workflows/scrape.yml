@@ -42,3 +42,9 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
+
+
+permissions:
+  security-events: write
+  contents: write
+  id-token: write
